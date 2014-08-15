@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suite name="Test Suite">
+   <test name="Test Case">
+    <parameter name="url" value=" https://colonelhathi.qubole.com"/>  
+    <classes>
+      <class name="CreateAccountAutomate" />
+    </classes>
+  </test>
+</suite>
