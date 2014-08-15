@@ -25,7 +25,7 @@ public class QuboleWebApp {
 	public QuboleWebApp(WebDriver driver,WebDriverWait wait) {
 		this.driver = driver;
 		this.wait = wait;
-	}
+	} 
 
 	public LoginPage logout(){
 		 JavascriptExecutor js = (JavascriptExecutor)driver;

@@ -12,7 +12,7 @@ public class ConfirmationPage {
 	
 	private WebDriver driver;
 	private WebDriverWait wait;
-	
+	 
 	 	@FindBy(how = How.ID, using = "confirmation_token")
 	    WebElement confCode;
 	 	

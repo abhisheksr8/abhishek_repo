@@ -71,7 +71,7 @@ public class CreateAccountAutomate {
         }
 
     }
-    
+     
     
     @Test
    	public void testA_registerNewUser(){

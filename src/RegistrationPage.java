@@ -18,7 +18,7 @@ public class RegistrationPage {
 	    
 	    @FindBy(how = How.ID, using = "user_user_phone")
 	    WebElement user_phone;
-	    
+	     
 	    @FindBy(how = How.ID, using = "user_bbdc")
 	    WebElement bigdataChallange;
 	    

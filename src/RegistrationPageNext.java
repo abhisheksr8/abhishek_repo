@@ -14,7 +14,7 @@ public class RegistrationPageNext {
 	
 	 	@FindBy(how = How.ID, using = "email_field")
 	    WebElement email;
-	    
+	     
 	    @FindBy(how = How.ID, using = "user_name")
 	    WebElement fullname;
 	    

@@ -13,7 +13,7 @@ public class LoginPage {
 
 	private WebDriver driver;
     private WebDriverWait wait;
-    
+     
     @FindBy(how = How.ID, using = "user_email")
     WebElement userid;
     
