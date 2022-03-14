@@ -62,7 +62,7 @@ jobs:
             pr_against_branch = os.environ.get("GIT_TO_REF")
             print("PR is raised against branch: {0}".format(pr_against_branch))
             
-            # ADD TAG TO ASANA
+            # ADD TAG TO ASANA TICKET
             asana_version = ""
             if pr_against_branch in ["master"]:
               asana_version = "{0}.{1}.{2}".format(tag_version_sequence[0], next_major_version, tag_version_sequence[2])
@@ -77,9 +77,10 @@ jobs:
             asana_base_url = "https://app.asana.com/api/1.0"
             asana_key = os.environ.get("ASANA_ACCESS_TOKEN")
             headers = {"Accept": "application/json","Content-Type":"application/json", "Authorization": "Bearer {0}".format(asana_key)}
-            response = requests.post("{0}/tasks/{1}/addTag".format(asana_base_url, asana_ticket_id), json={"data": {"tag": asana_version}}, headers=headers)
-            if response.status_code == 400:
-              print("The attach tag request failed with 400 error. Need to create the tag in asana first")
+            all_tags = requests.get("{0}/tags".format(base_url), headers=headers).json()
+            tag_id = [tag["gid"] for tag in all_tags["data"] if tag["name"] == asana_version]
+            if len(tag_id) == 0:
+              print("The tag with name {0} does not exist. Creating it.".format(asana_version))
               response = requests.get("{0}/workspaces".format(asana_base_url), headers=headers)
               assert response.status_code == 200, "Getting workspaces failed. Response: {0}".format(response__dict__)
               workspace_id = response.json()["data"][0]["gid"]
@@ -87,6 +88,6 @@ jobs:
               create_tag_data = {"data": {"color": "light-green", "name": asana_version, "notes": "Release tag for {0}".format(asana_version), "workspace": workspace_id}}
               response = requests.post("{0}/tags".format(asana_base_url), json=create_tag_data, headers=headers)
               assert response.status_code in [200, 201], "Create tag request failed. Response: {0}".format(response.__dict__)
-              response = requests.post("{0}/tasks/{1}/addTag".format(asana_base_url, asana_ticket_id), json={"data": {"tag": asana_version}}, headers=headers)
-            assert response.status_code == 200, "Response for add tag is non 200. Got is: {0}".format(response.__dict__)
+            response = requests.post("{0}/tasks/{1}/addTag".format(asana_base_url, asana_ticket_id), json={"data": {"tag": tag_id}}, headers=headers)
+            assert response.status_code == 200, "Response for add tag is not 200. Got is: {0}".format(response.__dict__)
             print("Successfully added tag {0} to asana ticket {1}".format(asana_version, asana_ticket_id))
