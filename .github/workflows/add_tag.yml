@@ -45,7 +45,7 @@ jobs:
             print("All tag got are: {0}".format(all_git_tags))
             assert len(all_git_tags) > 0, "The tags list is empty. Got is: {0}".format(all_git_tags)
             
-            # GENERATE VERSION INFORMATION
+            # FETCHING GENERATE VERSION INFORMATION
             tag_version_sequence = []
             for given_tag in all_git_tags:
               match = re.match("^[rv]{0,1}[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$", given_tag["name"], re.M|re.I)
