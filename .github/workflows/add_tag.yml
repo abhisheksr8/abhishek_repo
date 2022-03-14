@@ -42,6 +42,7 @@ jobs:
             )
             assert all_git_tags_response.status_code == 200, "Git tag response is non 200. Got is: {0}".format(all_git_tags_response.status_code)
             all_git_tags = all_git_tags_response.json()
+            print("All tag got are: {0}".format(all_git_tags))
             assert len(all_git_tags) > 0, "The tags list is empty. Got is: {0}".format(all_git_tags)
             
             # GENERATE VERSION INFORMATION
@@ -75,5 +76,5 @@ jobs:
             asana_base_url = "https://app.asana.com/api/1.0"
             asana_key = os.environ.get("ASANA_ACCESS_TOKEN")
             headers = {"Accept": "application/json","Content-Type":"application/json", "Authorization": "Bearer {0}".format(asana_key)}
-            response = requests.post("{0}/tasks/{1}/addTag".format(base_url, asana_ticket_id), json={"data": {"tag": real_tag_id}}, headers=headers)
+            response = requests.post("{0}/tasks/{1}/addTag".format(asana_base_url, asana_ticket_id), json={"data": {"tag": real_tag_id}}, headers=headers)
             assert response.status_code == 200, "Response for add tag is non 200. Got is: {0}".format(response.__dict__)
