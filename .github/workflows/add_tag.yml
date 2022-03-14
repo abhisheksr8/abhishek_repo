@@ -47,9 +47,9 @@ jobs:
             # GENERATE VERSION INFORMATION
             tag_version_sequence = []
             for given_tag in all_git_tags:
-              match = re.match("^[rv]{0,1}[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$", given_tag, re.M|re.I)
+              match = re.match("^[rv]{0,1}[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$", given_tag["name"], re.M|re.I)
               if match is not None:
-                tag_version_sequence = [int(re.sub("[^0-9]", "", item)) for item in all_git_tags[0]["name"].split(".")]
+                tag_version_sequence = [int(re.sub("[^0-9]", "", item)) for item in given_tag["name"].split(".")]
             print("Tag sequence got is: {0}".format(tag_version_sequence))
             assert len(tag_version_sequence) == 3, "The tag sequence fetched is incorrect format. Got is: {0}".format(tag_version_sequence)
             
