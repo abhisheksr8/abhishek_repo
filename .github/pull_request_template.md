@@ -1,6 +1,6 @@
 ### Prerequisites
 
-- [x] Have you checked to ensure there aren't other open [Pull Requests](../../../pulls) for the same update/change?
+- [x] Have you checked to ensure there aren't other open [Pull Requests](../../../pulls) for the same change?
 - [x] Added Screenshot / video / logs confirming solution to be working
 
 ### Current Behaviour
