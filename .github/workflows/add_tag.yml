@@ -18,11 +18,12 @@ jobs:
       - name: Install dependencies
         run: |
           pip install requests
-      - name: Add tag
-        uses: jannekem/run-python-script-action@v1
+      - name: Get all context
         run: |
           printenv
           echo "${{toJSON(github.event)}}"
+      - name: Add tag to asana ticket
+        uses: jannekem/run-python-script-action@v1
         env:
           PULL_REQUEST_NAME: ${{ github.event.pull_request.body }}
           GIT_TO_REF: ${{ github.event.pull_request.base.ref }}
