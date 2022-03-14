@@ -77,7 +77,7 @@ jobs:
             asana_base_url = "https://app.asana.com/api/1.0"
             asana_key = os.environ.get("ASANA_ACCESS_TOKEN")
             headers = {"Accept": "application/json","Content-Type":"application/json", "Authorization": "Bearer {0}".format(asana_key)}
-            all_tags = requests.get("{0}/tags".format(base_url), headers=headers).json()
+            all_tags = requests.get("{0}/tags".format(asana_base_url), headers=headers).json()
             tag_id = [tag["gid"] for tag in all_tags["data"] if tag["name"] == asana_version]
             if len(tag_id) == 0:
               print("The tag with name {0} does not exist. Creating it.".format(asana_version))
