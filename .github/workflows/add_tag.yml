@@ -1,0 +1,49 @@
+name: Pull Request
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  push:
+    branches:
+      - dev
+
+jobs:
+  asana:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Add to Asana
+      uses: insurify/github-asana-action@v1.0.1
+      with:
+        asana-pat: '1/1201958256901579:6f8b764977467e3805970f125634d389'
+        task-comment: '* Pull Request: '
+        trigger-phrase: 'Asana Task:'
+  add-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          pip install requests
+      - name: Add tag
+        uses: jannekem/run-python-script-action@v1
+        env:
+          PULL_REQUEST_NAME: ${{ github.event.pull_request.body }}
+        with:
+          script: |
+            import requests, os
+            base_url = 'https://app.asana.com/api/1.0'
+            headers = {"Accept": "application/json","Content-Type":"application/json", "Authorization": "Bearer 1/1201958256901579:00259240f1f32e586a455832b623983a"}
+            all_tags = requests.get("{0}/tags".format(base_url), headers=headers).json()
+            search_for = "release_15.0"
+            tag_id = [tag["gid"] for tag in all_tags["data"] if tag["name"] == search_for]
+            print(tag_id)
+            real_tag_id = tag_id[0]
+            print(os.environ)
+            print("PR got is: {0}".format(os.environ.get("PULL_REQUEST_NAME")))
+            asana_ticket_id = os.environ.get("PULL_REQUEST_NAME").split("app.asana.com")[1].split("/")[-1].strip("() ")
+            print(asana_ticket_id)
+            response = requests.post("{0}/tasks/{1}/addTag".format(base_url, asana_ticket_id), json={"data": {"tag": real_tag_id}}, headers=headers)
+            assert response.status_code == 200
