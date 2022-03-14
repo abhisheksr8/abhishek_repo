@@ -8,15 +8,6 @@ on:
       - dev
 
 jobs:
-  asana:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Add to Asana
-      uses: insurify/github-asana-action@v1.0.1
-      with:
-        asana-pat: '1/1201958256901579:6f8b764977467e3805970f125634d389'
-        task-comment: '* Pull Request: '
-        trigger-phrase: 'Asana Task:'
   add-tag:
     runs-on: ubuntu-latest
     steps:
