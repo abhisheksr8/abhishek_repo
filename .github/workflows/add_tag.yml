@@ -29,21 +29,60 @@ jobs:
           pip install requests
       - name: Add tag
         uses: jannekem/run-python-script-action@v1
+        run: |
+          printenv
+          echo "${{toJSON(github.event)}}"
         env:
           PULL_REQUEST_NAME: ${{ github.event.pull_request.body }}
+          GIT_TO_REF: ${{ github.event.pull_request.base.ref }}
+          GIT_FROM_REF: ${{ github.event.pull_request.head.ref }}
+          REPO_NAME: ${{ github.event.pull_request.base.repo.name }}
+          ASANA_ACCESS_TOKEN: ${{ secrets.ASANA_ACCESS_TOKEN }}
+          GIT_ACCESS_TOKEN: ${{ secrets.GIT_ACCESS_TOKEN }}
         with:
           script: |
-            import requests, os
-            base_url = 'https://app.asana.com/api/1.0'
-            headers = {"Accept": "application/json","Content-Type":"application/json", "Authorization": "Bearer 1/1201958256901579:00259240f1f32e586a455832b623983a"}
-            all_tags = requests.get("{0}/tags".format(base_url), headers=headers).json()
-            search_for = "release_15.0"
-            tag_id = [tag["gid"] for tag in all_tags["data"] if tag["name"] == search_for]
-            print(tag_id)
-            real_tag_id = tag_id[0]
-            print(os.environ)
-            print("PR got is: {0}".format(os.environ.get("PULL_REQUEST_NAME")))
+            import requests, os, re
+            
+            git_username = "abhisheksr8"
+            git_key = os.environ.get("GIT_ACCESS_TOKEN")
+            assert git_key, "Git key is not present. Please provide env variable GIT_ACCESS_TOKEN"
+            repo_name = os.environ.get("REPO_NAME")
+            assert repo_name, "Repo name is not present. Please provide env variable REPO_NAME"
+            
+            all_git_tags_response = requests.get("https://api.github.com/repos/{0}/{1}/tags".format(git_username, repo_name), 
+              headers = {"Accept": "application/vnd.github.v3+json"}, auth=(git_username, git_key)
+            )
+            assert all_git_tags_response.status_code == 200, "Git tag response is non 200. Got is: {0}".format(all_git_tags_response.status_code)
+            all_git_tags = all_git_tags_response.json()
+            assert len(all_git_tags) > 0, "The tags list is empty. Got is: {0}".format(all_git_tags)
+            tag_version_sequence = []
+            for given_tag in all_git_tags:
+              match = re.match("^[rv]{0,1}[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$", given_tag, re.M|re.I)
+              if match is not None:
+                tag_version_sequence = [int(re.sub("[^0-9]", "", item)) for item in all_git_tags[0]["name"].split(".")]
+            print("Tag sequence got is: {0}".format(tag_version_sequence))
+            assert len(tag_version_sequence) == 3, "The tag sequence fetched is incorrect format. Got is: {0}".format(tag_version_sequence)
+            
+            next_major_version = tag_version_sequence[1] + 1
+            next_minor_version = tag_version_sequence[2] + 1
+            print("Next major version: {0}, minor version: {1}".format(next_major_version, next_minor_version))
+            
+            pr_against_branch = os.environ.get("GIT_TO_REF")
+            print("PR is raised against branch: {0}".format(pr_against_branch))
+            
+            asana_version = ""
+            if pr_against_branch in ["master"]:
+              asana_version = "{0}.{1}.{2}".format(tag_version_sequence[0], next_major_version, tag_version_sequence[2])
+            else:
+              asana_version = "{0}.{1}.{2}".format(tag_version_sequence[0], tag_version_sequence[1], next_minor_version)
+            print("Asana version to tag with: {0}".format(asana_version))
+            assert asana_version, "Asana version got is: {0}".format(asana_version)
+            print("PR name got is: {0}".format(os.environ.get("PULL_REQUEST_NAME")))
             asana_ticket_id = os.environ.get("PULL_REQUEST_NAME").split("app.asana.com")[1].split("/")[-1].strip("() ")
-            print(asana_ticket_id)
+            print("Asana ticket ID that will get tagged: {0}".format(asana_ticket_id))
+            assert asana_ticket_id, "Asana ticket got is: {0}".format(asana_ticket_id)
+            asana_base_url = "https://app.asana.com/api/1.0"
+            asana_key = os.environ.get("ASANA_ACCESS_TOKEN")
+            headers = {"Accept": "application/json","Content-Type":"application/json", "Authorization": "Bearer {0}".format(asana_key)}
             response = requests.post("{0}/tasks/{1}/addTag".format(base_url, asana_ticket_id), json={"data": {"tag": real_tag_id}}, headers=headers)
-            assert response.status_code == 200
+            assert response.status_code == 200, "Response for add tag is non 200. Got is: {0}".format(response.__dict__)
