@@ -62,7 +62,7 @@ jobs:
             pr_against_branch = os.environ.get("GIT_TO_REF")
             print("PR is raised against branch: {0}".format(pr_against_branch))
             
-            # ADD TAG TO ASANA TICKET
+            # ADD TAG TO THE ASANA TICKET
             asana_version = ""
             if pr_against_branch in ["master"]:
               print("Merge against master so will update major version")
