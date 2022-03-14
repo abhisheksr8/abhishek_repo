@@ -21,12 +21,12 @@ jobs:
       - name: Add tag to asana ticket
         uses: jannekem/run-python-script-action@v1
         env:
+          ASANA_ACCESS_TOKEN: ${{ secrets.ASANA_ACCESS_TOKEN }}
+          GIT_ACCESS_TOKEN: ${{ secrets.GIT_ACCESS_TOKEN }}
           PULL_REQUEST_NAME: ${{ github.event.pull_request.body }}
           GIT_TO_REF: ${{ github.event.pull_request.base.ref }}
           GIT_FROM_REF: ${{ github.event.pull_request.head.ref }}
           REPO_NAME: ${{ github.event.pull_request.base.repo.name }}
-          ASANA_ACCESS_TOKEN: ${{ secrets.ASANA_ACCESS_TOKEN }}
-          GIT_ACCESS_TOKEN: ${{ secrets.GIT_ACCESS_TOKEN }}
         with:
           script: |
             import requests, os, re
@@ -73,7 +73,7 @@ jobs:
             print("Asana version to tag with: {0}".format(asana_version))
             assert asana_version, "Asana version got is: {0}".format(asana_version)
             print("PR name got is: {0}".format(os.environ.get("PULL_REQUEST_NAME")))
-            asana_ticket_id = os.environ.get("PULL_REQUEST_NAME").split("app.asana.com")[1].split("/")[-1].strip("() ")
+            asana_ticket_id = os.environ.get("PULL_REQUEST_NAME").split("app.asana.com")[1].split("/")[-1].split(">>")[0].strip("() ")
             print("Asana ticket ID that will get tagged: {0}".format(asana_ticket_id))
             assert asana_ticket_id, "Asana ticket got is: {0}".format(asana_ticket_id)
             asana_base_url = "https://app.asana.com/api/1.0"
