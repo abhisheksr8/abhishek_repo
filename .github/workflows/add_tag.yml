@@ -84,9 +84,9 @@ jobs:
               assert response.status_code == 200, "Getting workspaces failed. Response: {0}".format(response__dict__)
               workspace_id = response.json()["data"][0]["gid"]
               print("Workspace id fetched is: {0}".format(workspace_id))
-              create_tag_data = {"data": {"color": "light-green", "name": asana_version, "notes": "Release tag for {0}".format(asana_version),"workspace": workspace_id}}
+              create_tag_data = {"data": {"color": "light-green", "name": asana_version, "notes": "Release tag for {0}".format(asana_version), "workspace": workspace_id}}
               response = requests.post("{0}/tags".format(asana_base_url), json=create_tag_data, headers=headers)
-              assert response.status_code == 200, "Create tag request failed. Response: {0}".format(response__dict__)
+              assert response.status_code == 200, "Create tag request failed. Response: {0}".format(response.__dict__)
               response = requests.post("{0}/tasks/{1}/addTag".format(asana_base_url, asana_ticket_id), json={"data": {"tag": asana_version}}, headers=headers)
             assert response.status_code == 200, "Response for add tag is non 200. Got is: {0}".format(response.__dict__)
             print("Successfully added tag {0} to asana ticket {1}".format(asana_version, asana_ticket_id))
