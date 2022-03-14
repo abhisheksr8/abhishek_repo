@@ -66,7 +66,7 @@ jobs:
             asana_version = ""
             if pr_against_branch in ["master"]:
               print("Merge against master so will update major version")
-              asana_version = "{0}.{1}.{2}".format(tag_version_sequence[0], next_major_version, tag_version_sequence[2])
+              asana_version = "{0}.{1}.0".format(tag_version_sequence[0], next_major_version)
             elif pr_against_branch in ["release"]:
               print("Merge against release so will update minor version")
               asana_version = "{0}.{1}.{2}".format(tag_version_sequence[0], tag_version_sequence[1], next_minor_version)
