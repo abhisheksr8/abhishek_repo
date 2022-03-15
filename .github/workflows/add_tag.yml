@@ -2,12 +2,12 @@ name: Pull Request
 
 on:
   pull_request:
-    types: [closed]
+    types: [opened, synchronize, closed]
 
 jobs:
-  add-tag:
+  link-asana:
     runs-on: ubuntu-latest
-    if: (github.event.pull_request.base.ref == 'master' || github.event.pull_request.base.ref == 'release') && (github.event.pull_request.merged == true)
+    if: github.event.pull_request.base.ref == 'master' || github.event.pull_request.base.ref == 'release'
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -21,7 +21,7 @@ jobs:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: |
           echo "$GITHUB_CONTEXT"
-      - name: Add tag to asana ticket
+      - name: Add comment to linked asana task and tag the ticket on merge
         uses: jannekem/run-python-script-action@v1
         env:
           ASANA_ACCESS_TOKEN: ${{ secrets.ASANA_ACCESS_TOKEN }}
@@ -30,6 +30,9 @@ jobs:
           GIT_TO_REF: ${{ github.event.pull_request.base.ref }}
           GIT_FROM_REF: ${{ github.event.pull_request.head.ref }}
           REPO_NAME: ${{ github.event.pull_request.base.repo.name }}
+          GIT_PR_LINK: ${{ github.event.pull_request._links.html.href }}
+          GIT_COMMIT_SHA: ${{ github.event.after }}
+          IS_MERGE: ${{ github.event.pull_request.merged }}
         with:
           script: |
             import requests, os, re
@@ -82,21 +85,37 @@ jobs:
             asana_base_url = "https://app.asana.com/api/1.0"
             asana_key = os.environ.get("ASANA_ACCESS_TOKEN")
             headers = {"Accept": "application/json","Content-Type":"application/json", "Authorization": "Bearer {0}".format(asana_key)}
-            all_tags = requests.get("{0}/tags".format(asana_base_url), headers=headers).json()
-            tag_id = [tag["gid"] for tag in all_tags["data"] if tag["name"] == asana_version]
-            if len(tag_id) == 0:
-              print("The tag with name {0} does not exist. Creating it.".format(asana_version))
-              response = requests.get("{0}/workspaces".format(asana_base_url), headers=headers)
-              assert response.status_code == 200, "Getting workspaces failed. Response: {0}".format(response__dict__)
-              workspace_id = response.json()["data"][0]["gid"]
-              print("Workspace id fetched is: {0}".format(workspace_id))
-              create_tag_data = {"data": {"color": "light-green", "name": asana_version, "notes": "Release tag for {0}".format(asana_version), "workspace": workspace_id}}
-              response = requests.post("{0}/tags".format(asana_base_url), json=create_tag_data, headers=headers)
-              assert response.status_code in [200, 201], "Create tag request failed. Response: {0}".format(response.__dict__)
-              tag_id = response.json()["data"]["gid"]
+            
+            is_merged = os.environ.get("IS_MERGE")
+            git_pr_link = os.environ.get("GIT_PR_LINK")
+            git_commit_sha = os.environ.get("GIT_COMMIT_SHA")
+            git_commit_link = "{0}/commits/{1}".format(git_pr_link, git_commit_sha)
+            comment = "New change: {0}\nPull request: {1}".format(git_commit_link, git_pr_link)
+            if is_merged == "true":
+              comment = "{0}\nPR is merged.".format(comment)
+            response = requests.post("{0}/tasks/{1}/stories".format(asana_base_url, asana_ticket_id), json={"data": {"is_pinned": False,"text": comment}}, headers=headers)
+            assert response.status_code in [200, 201], "Response for add comment to ASANA is not 200. Got is: {0}".format(response.__dict__)
+            print("Successfully added comment:\n{0}\nTo asana ticket {1}".format(asana_version, asana_ticket_id))
+            
+            if is_merged == "true":
+              print("Adding tag since it is a merge request.")
+              all_tags = requests.get("{0}/tags".format(asana_base_url), headers=headers).json()
+              tag_id = [tag["gid"] for tag in all_tags["data"] if tag["name"] == asana_version]
+              if len(tag_id) == 0:
+                print("The tag with name {0} does not exist. Creating it.".format(asana_version))
+                response = requests.get("{0}/workspaces".format(asana_base_url), headers=headers)
+                assert response.status_code == 200, "Getting workspaces failed. Response: {0}".format(response__dict__)
+                workspace_id = response.json()["data"][0]["gid"]
+                print("Workspace id fetched is: {0}".format(workspace_id))
+                create_tag_data = {"data": {"color": "light-green", "name": asana_version, "notes": "Release tag for {0}".format(asana_version), "workspace": workspace_id}}
+                response = requests.post("{0}/tags".format(asana_base_url), json=create_tag_data, headers=headers)
+                assert response.status_code in [200, 201], "Create tag request failed. Response: {0}".format(response.__dict__)
+                tag_id = response.json()["data"]["gid"]
+              else:
+                print("Tag exists already so attaching the same tag to the ticket.")
+                tag_id = tag_id[0]
+              response = requests.post("{0}/tasks/{1}/addTag".format(asana_base_url, asana_ticket_id), json={"data": {"tag": tag_id}}, headers=headers)
+              assert response.status_code == 200, "Response for add tag is not 200. Got is: {0}".format(response.__dict__)
+              print("Successfully added tag {0} to asana ticket {1}".format(asana_version, asana_ticket_id))
             else:
-              print("Tag exists already so attaching the same tag to the ticket.")
-              tag_id = tag_id[0]
-            response = requests.post("{0}/tasks/{1}/addTag".format(asana_base_url, asana_ticket_id), json={"data": {"tag": tag_id}}, headers=headers)
-            assert response.status_code == 200, "Response for add tag is not 200. Got is: {0}".format(response.__dict__)
-            print("Successfully added tag {0} to asana ticket {1}".format(asana_version, asana_ticket_id))
+              print("Did not attach tag to the asana tag as it is not a merge request.")
