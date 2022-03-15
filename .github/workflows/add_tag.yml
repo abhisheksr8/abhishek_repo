@@ -94,7 +94,7 @@ jobs:
             assert response.status_code in [200, 201], "Response for add comment to ASANA is not 200. Got is: {0}".format(response.__dict__)
             print("Successfully added comment:\n{0}\nTo asana ticket {1}".format(asana_version, asana_ticket_id))
             
-            if is_merge_request == "true":
+            if os.environ.get("IS_MERGE") == "true":
               print("Adding tag since it is a merge request.")
               all_tags = requests.get("{0}/tags".format(asana_base_url), headers=headers).json()
               tag_id = [tag["gid"] for tag in all_tags["data"] if tag["name"] == asana_version]
@@ -114,3 +114,5 @@ jobs:
               response = requests.post("{0}/tasks/{1}/addTag".format(asana_base_url, asana_ticket_id), json={"data": {"tag": tag_id}}, headers=headers)
               assert response.status_code == 200, "Response for add tag is not 200. Got is: {0}".format(response.__dict__)
               print("Successfully added tag {0} to asana ticket {1}".format(asana_version, asana_ticket_id))
+            else:
+              print("Did not attach tag to the asana tag as it is not a merge request.")
