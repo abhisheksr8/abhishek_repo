@@ -95,7 +95,7 @@ jobs:
               comment = "{0}\nPR is merged.".format(comment)
             response = requests.post("{0}/tasks/{1}/stories".format(asana_base_url, asana_ticket_id), json={"data": {"is_pinned": False,"text": comment}}, headers=headers)
             assert response.status_code in [200, 201], "Response for add comment to ASANA is not 200. Got is: {0}".format(response.__dict__)
-            print("Successfully added comment:\n{0}\nTo asana ticket {1}".format(asana_version, asana_ticket_id))
+            print("Successfully added comment:\n{0}\nTo asana ticket {1}".format(comment, asana_ticket_id))
             
             if is_merged == "true":
               print("Adding tag since it is a merge request.")
