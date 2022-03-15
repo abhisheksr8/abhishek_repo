@@ -88,7 +88,7 @@ jobs:
             
             git_pr_link = os.environ.get("GIT_PR_LINK")
             git_commit_sha = os.environ.get("GIT_COMMIT_SHA")
-            git_commit_link = "{0}/{1}".format(git_pr_link.split("/pull/")[0], git_commit_sha)
+            git_commit_link = "{0}/commit/{1}".format(git_pr_link.split("/pull/")[0], git_commit_sha)
             comment = "New change: {0}\nPull request: {1}".format(git_commit_link, git_pr_link)
             response = requests.post("{0}/tasks/{1}/stories".format(asana_base_url, asana_ticket_id), json={"data": {"is_pinned": False,"text": comment}}, headers=headers)
             assert response.status_code in [200, 201], "Response for add comment to ASANA is not 200. Got is: {0}".format(response.__dict__)
