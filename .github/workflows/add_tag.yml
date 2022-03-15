@@ -79,9 +79,9 @@ jobs:
             print("Asana version to tag with: {0}".format(asana_version))
             assert asana_version, "Asana version got is: {0}".format(asana_version)
             print("PR name got is: {0}".format(os.environ.get("PULL_REQUEST_NAME")))
-            asana_ticket_id = os.environ.get("PULL_REQUEST_NAME").split("app.asana.com")[1].split("/")[-1].split(">>")[0].strip("() ")
-            print("Asana ticket ID that will get tagged: {0}".format(asana_ticket_id))
-            assert asana_ticket_id, "Asana ticket got is: {0}".format(asana_ticket_id)
+            asana_ticket_ids = os.environ.get("PULL_REQUEST_NAME").split("Asana Ticket Link: <<")[1].split(">>")[0].strip("() ").split(",")
+            print("Asana ticket ID that will get tagged: {0}".format(asana_ticket_ids))
+            assert asana_ticket_id, "Asana tickets got is: {0}".format(asana_ticket_ids)
             asana_base_url = "https://app.asana.com/api/1.0"
             asana_key = os.environ.get("ASANA_ACCESS_TOKEN")
             headers = {"Accept": "application/json","Content-Type":"application/json", "Authorization": "Bearer {0}".format(asana_key)}
@@ -93,9 +93,12 @@ jobs:
             comment = "New change: {0}\nPull request: {1}".format(git_commit_link, git_pr_link)
             if is_merged == "true":
               comment = "{0}\nPR is merged.".format(comment)
-            response = requests.post("{0}/tasks/{1}/stories".format(asana_base_url, asana_ticket_id), json={"data": {"is_pinned": False,"text": comment}}, headers=headers)
-            assert response.status_code in [200, 201], "Response for add comment to ASANA is not 200. Got is: {0}".format(response.__dict__)
-            print("Successfully added comment:\n{0}\nTo asana ticket {1}".format(comment, asana_ticket_id))
+            for asana_ticket_id_item in asana_ticket_ids:
+              asana_ticket_id = asana_ticket_id_item.split("/")[-1]
+              print("Adding comment to ticket id: {0}".format(asana_ticket_id))
+              response = requests.post("{0}/tasks/{1}/stories".format(asana_base_url, asana_ticket_id), json={"data": {"is_pinned": False,"text": comment}}, headers=headers)
+              assert response.status_code in [200, 201], "Response for add comment to ASANA is not 200. Got is: {0}".format(response.__dict__)
+              print("Successfully added comment:\n{0}\nTo asana ticket {1}".format(comment, asana_ticket_id))
             
             if is_merged == "true":
               print("Adding tag since it is a merge request.")
@@ -114,8 +117,11 @@ jobs:
               else:
                 print("Tag exists already so attaching the same tag to the ticket.")
                 tag_id = tag_id[0]
-              response = requests.post("{0}/tasks/{1}/addTag".format(asana_base_url, asana_ticket_id), json={"data": {"tag": tag_id}}, headers=headers)
-              assert response.status_code == 200, "Response for add tag is not 200. Got is: {0}".format(response.__dict__)
-              print("Successfully added tag {0} to asana ticket {1}".format(asana_version, asana_ticket_id))
+              for asana_ticket_id_item in asana_ticket_ids:
+                asana_ticket_id = asana_ticket_id_item.split("/")[-1]
+                print("Adding tag to ticket id: {0}".format(asana_ticket_id))
+                response = requests.post("{0}/tasks/{1}/addTag".format(asana_base_url, asana_ticket_id), json={"data": {"tag": tag_id}}, headers=headers)
+                assert response.status_code == 200, "Response for add tag is not 200. Got is: {0}".format(response.__dict__)
+                print("Successfully added tag {0} to asana ticket {1}".format(asana_version, asana_ticket_id))
             else:
               print("Did not attach tag to the asana tag as it is not a merge request.")
