@@ -81,7 +81,7 @@ jobs:
             print("PR name got is: {0}".format(os.environ.get("PULL_REQUEST_NAME")))
             asana_ticket_ids = os.environ.get("PULL_REQUEST_NAME").split("Asana Ticket Link: <<")[1].split(">>")[0].strip("() ").split(",")
             print("Asana ticket ID that will get tagged: {0}".format(asana_ticket_ids))
-            assert asana_ticket_id, "Asana tickets got is: {0}".format(asana_ticket_ids)
+            assert asana_ticket_ids, "Asana tickets got is: {0}".format(asana_ticket_ids)
             asana_base_url = "https://app.asana.com/api/1.0"
             asana_key = os.environ.get("ASANA_ACCESS_TOKEN")
             headers = {"Accept": "application/json","Content-Type":"application/json", "Authorization": "Bearer {0}".format(asana_key)}
