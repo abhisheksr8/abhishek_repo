@@ -31,7 +31,7 @@ jobs:
           GIT_FROM_REF: ${{ github.event.pull_request.head.ref }}
           REPO_NAME: ${{ github.event.pull_request.base.repo.name }}
           GIT_PR_LINK: ${{ github.event.pull_request._links.html.href }}
-          GIT_COMMIT_SHA: ${{ github.event.after }}
+          GIT_COMMIT_SHA: ${{ github.event.pull_request._links.statuses.href }}
           IS_MERGE: ${{ github.event.pull_request.merged }}
         with:
           script: |
@@ -88,14 +88,14 @@ jobs:
             
             is_merged = os.environ.get("IS_MERGE")
             git_pr_link = os.environ.get("GIT_PR_LINK")
-            git_commit_sha = os.environ.get("GIT_COMMIT_SHA")
+            git_commit_sha = os.environ.get("GIT_COMMIT_SHA").split("/")[-1]
             git_commit_link = "{0}/commits/{1}".format(git_pr_link, git_commit_sha)
             comment = "New change: {0}\nPull request: {1}".format(git_commit_link, git_pr_link)
             if is_merged == "true":
               comment = "{0}\nPR is merged.".format(comment)
             response = requests.post("{0}/tasks/{1}/stories".format(asana_base_url, asana_ticket_id), json={"data": {"is_pinned": False,"text": comment}}, headers=headers)
             assert response.status_code in [200, 201], "Response for add comment to ASANA is not 200. Got is: {0}".format(response.__dict__)
-            print("Successfully added comment:\n{0}\nTo asana ticket {1}".format(asana_version, asana_ticket_id))
+            print("Successfully added comment:\n{0}\nTo asana ticket {1}".format(comment, asana_ticket_id))
             
             if is_merged == "true":
               print("Adding tag since it is a merge request.")
