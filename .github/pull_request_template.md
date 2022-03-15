@@ -17,6 +17,6 @@ Explain the fix that was applied to achieve the expected behaviour
 
 ### Asana Ticket
 
-Enter the Asana ticket link against which fix was made
+Enter the Asana ticket link against which fix was made (comma separated if more than 1)
 
-Asana Ticket Link: << https://app.asana.com/0/<project_id>/<issue_id> >>
+Asana Ticket Links: << https://app.asana.com/0/<project_id>/<issue_id1>,https://app.asana.com/0/<project_id>/<issue_id2> >>
